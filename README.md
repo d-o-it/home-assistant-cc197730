@@ -1,5 +1,6 @@
 # home-assistant-cc197730
 Conrad Components 197730 home assistant integration
+
 https://www.conrad.at/de/p/conrad-components-197730-relaiskarte-baustein-12-v-dc-197730.html
 
 # Purpose
