@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-from .cc197730 import CC197730
+from .cc197730 import CC197730, InvalidResponseException
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -75,7 +75,9 @@ class CC197730Relay(SwitchEntity):
         try:
             await self.hub.set(self.card, self.relay)
         except ConnectionRefusedError as ex:
-            _LOGGER.exception(ex.strerror)
+            _LOGGER.error(ex.strerror)
+        except InvalidResponseException as ex:
+            _LOGGER.error(ex.strerror)
         else:
             self._is_on = True
             self.async_write_ha_state()
@@ -85,6 +87,8 @@ class CC197730Relay(SwitchEntity):
         try:
             await self.hub.clear(self.card, self.relay)
         except ConnectionRefusedError as ex:
+            _LOGGER.error(ex.strerror)
+        except InvalidResponseException as ex:
             _LOGGER.error(ex.strerror)
         else:
             self._is_on = False

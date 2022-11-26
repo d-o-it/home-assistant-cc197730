@@ -10,11 +10,18 @@ _TIMEOUT = 3.0
 _SEND_READ_TIMEOUT = 0.05
 
 
+class InvalidResponseException(Exception):
+    errno: int
+    strerror: str
+
+
 class CC197330State:
+    """Conrad Components 197730 status model."""
+
     def __init__(self, card: int, relay: int, is_on: int) -> None:
         self._card = card
         self._relay = relay
-        self._is_on = True if is_on is 1 else False
+        self._is_on = True if is_on == 1 else False
 
     @property
     def card(self):
@@ -33,6 +40,8 @@ class CC197330State:
 
 
 class CC197730:
+    """Conrad Components 197730 implementation."""
+
     def __init__(self, serial: serialio) -> None:
         self.serial = serial
         self.serial_lock = asyncio.Lock()
@@ -77,7 +86,7 @@ class CC197730:
     async def __get_all_states(self) -> list:
         data = await self.__open_send_init()
         if len(data) < 8 or data[0] != 254:
-            raise Exception("Invalid respose")
+            raise InvalidResponseException("Invalid start byte")
 
         card_count = 0
         card_version = 0
@@ -102,7 +111,7 @@ class CC197730:
 
         data = await self.__send_and_read(bytearray([2, 0, 0, 2]))
         if len(data) < 8 or data[0] != 253:
-            raise Exception("Invalid respose")
+            raise InvalidResponseException("Invalid start byte")
 
         devices = []
         for i in range(0, card_count * 4, 4):
@@ -116,13 +125,13 @@ class CC197730:
     async def __worker(self, cmd: int, card: int, relay: int) -> bytearray:
         data = await self.__open_send_init()
         if len(data) < 4 or data[0] != 254:
-            raise Exception("Invalid respose")
+            raise InvalidResponseException("Invalid start byte")
 
         relay_bits = (1 << (relay - 1)) & 255
         cksum = (cmd ^ card ^ relay_bits) & 255
         data = await self.__send_and_read(bytearray([cmd, card, relay_bits, cksum]))
         if len(data) < 4 or not self.__response_valid(data, cmd, card, relay):
-            raise Exception("Invalid respose")
+            raise InvalidResponseException("Invalid respose")
 
         return data
 
