@@ -1,0 +1,16 @@
+{
+  "codeowners": [
+    "@d-o-it"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/d-o-it/home-assistant-cc197730/blob/master/README.md",
+  "issue_tracker": "https://github.com/d-o-it/home-assistant-cc197730/issues",
+  "domain": "cc197730",
+  "name": "Conrad Components 197730",
+  "iot_class": "local_polling",
+  "requirements": [
+    "serialio==2.4.0"
+  ],
+  "version": "1.0.0"
+}
