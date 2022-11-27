@@ -3,30 +3,25 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-from .cc197730 import CC197730, InvalidResponseException
-from homeassistant.components.switch import SwitchEntity
+from dataclasses import dataclass
+
+from .cc197730 import CC197730, CC197330State, InvalidResponseException
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.const import STATE_OFF, STATE_ON
-from .const import DOMAIN, HUB
-
-PARALLEL_UPDATES = 0
+from .const import DOMAIN, HUB, ATTR_SURGE_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def create_cc197730_switch_entity(
-    config_entry: ConfigEntry, hub: CC197730, card: int, relay: int, is_on: bool
-) -> CC197730Relay:
+    config_entry: ConfigEntry, hub: CC197730, state: CC197330State
+):
     """Set up an entity for this domain."""
-    _LOGGER.info(
-        "Adding CC197730 switch card %i relay %i with state %s",
-        card,
-        relay,
-        STATE_ON if is_on else STATE_OFF,
-    )
-    return CC197730Relay(config_entry.entry_id, hub, card, relay, is_on)
+    _LOGGER.info("Adding CC197730 switch %s", state)
+    return CC197730Relay(config_entry.entry_id, hub, state)
 
 
 async def async_setup_entry(
@@ -39,31 +34,54 @@ async def async_setup_entry(
     entities = []
 
     hub: CC197730 = hass.data[DOMAIN][config_entry.entry_id][HUB]
-    states = await hub.get_states()
+    states: list[CC197330State] = await hub.get_states()
     for state in states:
-        entities.append(
-            create_cc197730_switch_entity(
-                config_entry, hub, state.card, state.relay, state.is_on
-            )
-        )
+        entities.append(create_cc197730_switch_entity(config_entry, hub, state))
 
     async_add_entities(entities)
 
 
-class CC197730Relay(SwitchEntity):
-    """Representation of a LCN switch for relay ports."""
+@dataclass
+class SurgeEntityDescription(SwitchEntityDescription):
+    """A class that describes surge entities."""
 
-    def __init__(
-        self, entry_id: str, hub: CC197730, card: int, relay: int, is_on: bool
-    ) -> None:
+
+class CC197730Relay(SwitchEntity):
+    """Representation of a Conrad Components 197730 switch for relay ports."""
+
+    entity_description: SurgeEntityDescription
+    _attr_mode_surge: bool = False
+
+    @property
+    def mode_surge(self) -> bool:
+        """Whether the relay is in surge mode."""
+        return self._attr_mode_surge
+
+    def __init__(self, entry_id: str, hub: CC197730, state: CC197330State) -> None:
         """Initialize the LCN switch."""
         self.entry_id = entry_id
         self.hub = hub
-        self.card = card
-        self.relay = relay
-        self._attr_name = f"K{card}R{relay}"
-        self._attr_unique_id = f"{card}.{relay}"
-        self._is_on = is_on
+        self.card = state.card
+        self.relay = state.relay
+        self.card_name = f"K{self.card}"
+        self._attr_name = f"K{self.card}R{self.relay}"
+        self._attr_unique_id = f"{self.card}.{self.relay}"
+        self._is_on = state.is_on
+        self.hw_version = state.hw_version
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return DeviceInfo(
+            identifiers={
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self.card_name)
+            },
+            name=self.card_name,
+            manufacturer="Conrad Components",
+            model="197730",
+            hw_version=self.hw_version,
+        )
 
     @property
     def is_on(self) -> bool:

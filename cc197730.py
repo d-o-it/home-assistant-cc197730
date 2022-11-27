@@ -4,6 +4,7 @@ import logging
 import asyncio
 import asyncio.tasks
 import serialio
+from homeassistant.const import STATE_OFF, STATE_ON
 
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 3.0
@@ -18,9 +19,10 @@ class InvalidResponseException(Exception):
 class CC197330State:
     """Conrad Components 197730 status model."""
 
-    def __init__(self, card: int, relay: int, is_on: int) -> None:
+    def __init__(self, card: int, relay: int, hw_version: str, is_on: int) -> None:
         self._card = card
         self._relay = relay
+        self._hw_version = hw_version
         self._is_on = True if is_on == 1 else False
 
     @property
@@ -34,9 +36,17 @@ class CC197330State:
         return self._relay
 
     @property
+    def hw_version(self):
+        """The relay property."""
+        return self._hw_version
+
+    @property
     def is_on(self):
         """The is_on property."""
         return self._is_on
+
+    def __str__(self) -> str:
+        return f"Card {self.card} relay {self.relay} state {STATE_ON if self.is_on else STATE_OFF}"
 
 
 class CC197730:
@@ -102,11 +112,11 @@ class CC197730:
                     card_version = data[i + 2]
                 break
 
+        hw_version = f"{card_version / 10}"
         _LOGGER.info(
-            "%i card with version %i.%i detected",
+            "%i card with version %s detected",
             card_count,
-            card_version / 10,
-            card_version % 10,
+            hw_version,
         )
 
         data = await self.__send_and_read(bytearray([2, 0, 0, 2]))
@@ -117,7 +127,9 @@ class CC197730:
         for i in range(0, card_count * 4, 4):
             for j in range(8):
                 devices.append(
-                    CC197330State(data[i + 1], j + 1, (data[i + 2] >> j) & 1)
+                    CC197330State(
+                        data[i + 1], j + 1, hw_version, (data[i + 2] >> j) & 1
+                    )
                 )
 
         return devices

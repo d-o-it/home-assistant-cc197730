@@ -3,3 +3,4 @@
 DOMAIN = "cc197730"
 
 HUB = "hub"
+ATTR_SURGE_MODE = "surge_mode"
