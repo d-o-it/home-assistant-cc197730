@@ -5,18 +5,18 @@ import logging
 from typing import Any
 from dataclasses import dataclass
 
-from .cc197730 import CC197730, CC197330State, InvalidResponseException
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from .cc197730 import CC197730, CC197330State, InvalidResponseException
 from .const import DOMAIN, HUB, ATTR_SURGE_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def create_cc197730_switch_entity(
+def create_switch_entity(
     config_entry: ConfigEntry, hub: CC197730, state: CC197330State
 ):
     """Set up an entity for this domain."""
@@ -36,7 +36,7 @@ async def async_setup_entry(
     hub: CC197730 = hass.data[DOMAIN][config_entry.entry_id][HUB]
     states: list[CC197330State] = await hub.get_states()
     for state in states:
-        entities.append(create_cc197730_switch_entity(config_entry, hub, state))
+        entities.append(create_switch_entity(config_entry, hub, state))
 
     async_add_entities(entities)
 

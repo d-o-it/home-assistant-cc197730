@@ -4,11 +4,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 import serialio
-from .cc197730 import CC197730
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
+from .cc197730 import CC197730
 
 from .const import HUB, DOMAIN
 
