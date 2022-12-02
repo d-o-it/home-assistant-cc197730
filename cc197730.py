@@ -52,8 +52,9 @@ class CC197330State:
 class CC197730:
     """Conrad Components 197730 implementation."""
 
-    def __init__(self, serial: serialio) -> None:
+    def __init__(self, serial: serialio, title: str) -> None:
         self.serial = serial
+        self.title = title.replace(".", "_").replace(":", "_")
         self.serial_lock = asyncio.Lock()
 
     async def __send_and_read(self, data: bytearray) -> bytearray:

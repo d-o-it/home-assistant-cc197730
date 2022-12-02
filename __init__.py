@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.title = f"{host}:{port}"
     await sio.set_baudrate(19200)
     await sio.set_timeout(1.0)
-    hub = CC197730(sio)
+    hub = CC197730(sio, entry.title)
 
     _LOGGER.info('Connection created to "%s"', entry.data[CONF_URL])
     hass.data[DOMAIN][entry.entry_id] = {HUB: hub}

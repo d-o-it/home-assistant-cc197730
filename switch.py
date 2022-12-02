@@ -65,7 +65,7 @@ class CC197730Relay(SwitchEntity):
         self.relay = state.relay
         self.card_name = f"K{self.card}"
         self._attr_name = f"K{self.card}R{self.relay}"
-        self._attr_unique_id = f"{self.card}.{self.relay}"
+        self._attr_unique_id = f"{hub.title}.{self.card}.{self.relay}"
         self._is_on = state.is_on
         self.hw_version = state.hw_version
 
