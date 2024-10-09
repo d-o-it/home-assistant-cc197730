@@ -1,4 +1,5 @@
 """The Conrad Components 197730 integration."""
+
 from __future__ import annotations
 
 import logging
@@ -26,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # create connection
     sio = serialio.serial_for_url(entry.data[CONF_URL])
-    entry.title = f"{sio.port}"
+    hass.config_entries.async_update_entry(entry, title=f"{sio.port}")
     await sio.set_baudrate(19200)
     await sio.set_timeout(1.0)
     hub = CC197730(sio, entry.title)
